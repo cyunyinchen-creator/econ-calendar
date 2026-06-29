@@ -1,0 +1,51 @@
+name: 📡 Reuters & AP News Monitor
+
+on:
+  schedule:
+    # Run every 30 minutes (Taiwan time 06:00-24:00)
+    # UTC: 22:00-16:00 (previous day to current day)
+    - cron: '*/30 22-23 * * *'  # 06:00-08:00 Taiwan
+    - cron: '*/30 0-16 * * *'   # 08:00-00:00 Taiwan
+
+  # Manual trigger for testing
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Run mode (normal/test)'
+        required: false
+        default: 'normal'
+
+jobs:
+  monitor-news:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v3
+
+    - name: 🐍 Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: 📦 Install packages
+      run: |
+        pip install requests feedparser pytz
+
+    - name: 📡 Run news monitor
+      env:
+        TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      run: |
+        if [ "${{ github.event.inputs.mode }}" = "test" ]; then
+          python news_monitor.py test
+        else
+          python news_monitor.py
+        fi
+
+    - name: 💾 Save sent news cache
+      uses: actions/upload-artifact@v3
+      with:
+        name: sent-news-cache
+        path: sent_news.json
+        retention-days: 7
