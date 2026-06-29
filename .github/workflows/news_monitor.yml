@@ -43,9 +43,3 @@ jobs:
           python news_monitor.py
         fi
 
-    - name: 💾 Save sent news cache
-      uses: actions/upload-artifact@v3
-      with:
-        name: sent-news-cache
-        path: sent_news.json
-        retention-days: 7
