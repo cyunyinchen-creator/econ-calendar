@@ -1,0 +1,35 @@
+name: 📅 每週自動更新總經日曆
+
+on:
+  schedule:
+    - cron: '0 1 * * 0'
+  workflow_dispatch:
+
+jobs:
+  update-calendar:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout 程式碼
+      uses: actions/checkout@v3
+    
+    - name: 🐍 設定 Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: 📦 安裝套件
+      run: |
+        pip install -r requirements.txt
+    
+    - name: 🚀 執行日曆更新
+      run: |
+        python main.py
+    
+    - name: 💾 Commit 更新
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add econ_calendar.ics econ_events.json
+        git diff --quiet && git diff --staged --quiet || git commit -m "📅 自動更新 $(date +'%Y-%m-%d')"
+        git push
